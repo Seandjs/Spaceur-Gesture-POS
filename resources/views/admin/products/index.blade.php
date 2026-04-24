@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+
 <div class="space-y-6">
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
@@ -12,7 +13,7 @@
         </div>
 
         <a href="{{ route('admin.products.create') }}"
-           class="inline-flex items-center rounded-xl bg-neutral-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800">
+            class="inline-flex items-center rounded-xl bg-neutral-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800">
             Tambah Barang
         </a>
     </div>
@@ -24,6 +25,11 @@
         </div>
 
         <div class="overflow-x-auto">
+            @if (session('success'))
+            <div class="rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-700 shadow-sm">
+                {{ session('success') }}
+            </div>
+            @endif
             <table class="min-w-full text-left text-sm">
                 <thead>
                     <tr class="border-b border-neutral-200 text-neutral-500">
@@ -37,42 +43,49 @@
                     </tr>
                 </thead>
                 <tbody class="text-neutral-800">
+                    @forelse ($products as $product)
                     <tr class="border-b border-neutral-100">
-                        <td class="px-3 py-4">SPCR-001</td>
-                        <td class="px-3 py-4">Kaos Hitam</td>
-                        <td class="px-3 py-4">Kaos</td>
-                        <td class="px-3 py-4">M</td>
-                        <td class="px-3 py-4">85.000</td>
-                        <td class="px-3 py-4">barcode_001.png</td>
+                        <td class="px-3 py-4">{{ $product->code }}</td>
+                        <td class="px-3 py-4">{{ $product->name }}</td>
+                        <td class="px-3 py-4">{{ $product->category }}</td>
+                        <td class="px-3 py-4">{{ $product->size }}</td>
+                        <td class="px-3 py-4">{{ number_format($product->price, 0, ',', '.') }}</td>
+                        <td class="px-3 py-4">
+                            @if ($product->barcode_path)
+                            <a href="{{ route('admin.products.download-barcode', $product->id) }}"
+                                class="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 transition hover:bg-neutral-100">
+                                Download
+                            </a>
+                            @else
+                            -
+                            @endif
+                        </td>
                         <td class="px-3 py-4">
                             <div class="flex gap-2">
-                                <button class="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100">
+                                <a href="{{ route('admin.products.edit', $product->id) }}"
+                                    class="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100">
                                     Edit
-                                </button>
-                                <button class="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100">
-                                    Hapus
-                                </button>
+                                </a>
+
+                                <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST"
+                                    onsubmit="return confirm('Yakin ingin menghapus data ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                        class="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100">
+                                        Hapus
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
+                    @empty
                     <tr>
-                        <td class="px-3 py-4">SPCR-002</td>
-                        <td class="px-3 py-4">Kemeja Putih</td>
-                        <td class="px-3 py-4">Kemeja</td>
-                        <td class="px-3 py-4">L</td>
-                        <td class="px-3 py-4">120.000</td>
-                        <td class="px-3 py-4">barcode_002.png</td>
-                        <td class="px-3 py-4">
-                            <div class="flex gap-2">
-                                <button class="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100">
-                                    Edit
-                                </button>
-                                <button class="rounded-lg border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100">
-                                    Hapus
-                                </button>
-                            </div>
+                        <td colspan="7" class="px-3 py-6 text-center text-sm text-neutral-500">
+                            Belum ada data barang.
                         </td>
                     </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

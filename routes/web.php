@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'home')->name('home');
@@ -11,7 +12,14 @@ Route::prefix('cashier')->name('cashier.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::prefix('products')->name('products.')->group(function () {
-        Route::view('/', 'admin.products.index')->name('index');
-        Route::view('/create', 'admin.products.create')->name('create');
+        Route::get('/', [ProductController::class, 'index'])->name('index');
+        Route::get('/create', [ProductController::class, 'create'])->name('create');
+        Route::post('/', [ProductController::class, 'store'])->name('store');
+        Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
+        Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+        Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+
+        Route::get('/{product}/download-barcode', [ProductController::class, 'downloadBarcode'])
+            ->name('download-barcode');
     });
 });

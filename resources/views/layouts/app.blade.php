@@ -12,7 +12,7 @@
             <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
                 <div class="flex items-center gap-3">
                     <div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl border border-neutral-200 bg-white">
-                        <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-full w-full object-contain">
+                        <img src="{{ asset('images/spaceurlogo.png') }}" alt="Logo" class="h-full w-full object-contain">
                     </div>
 
                     <div>
