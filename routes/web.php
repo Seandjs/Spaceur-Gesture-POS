@@ -8,6 +8,7 @@ Route::view('/', 'home')->name('home');
 
 Route::prefix('cashier')->name('cashier.')->group(function () {
     Route::view('/gesture-login', 'cashier.gesture-login')->name('gesture-login');
+    Route::post('/gesture-pass', [PosController::class, 'markGesturePassed'])->name('gesture-pass');
 
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
     Route::post('/pos/add', [PosController::class, 'addToCart'])->name('add-to-cart');

@@ -10,11 +10,18 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Http;
 
 class PosController extends Controller
 {
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
+        if (! session('gesture_passed')) {
+            return redirect()
+                ->route('cashier.gesture-login')
+                ->with('error', 'Silakan login dengan gesture terlebih dahulu.');
+        }
+
         $cart = session('cart', []);
         $total = collect($cart)->sum('subtotal');
         $totalItems = collect($cart)->sum('qty');
@@ -122,11 +129,44 @@ class PosController extends Controller
 
             DB::commit();
 
+            $sale->load('items.product');
+
+            $printMessage = null;
+
+            try {
+                $printerUrl = rtrim(env('PRINTER_SERVICE_URL', 'http://127.0.0.1:5001'), '/');
+
+                $payload = [
+                    'invoice_number' => $sale->invoice_number,
+                    'total_amount' => $sale->total_amount,
+                    'items' => $sale->items->map(function ($item) {
+                        return [
+                            'name' => $item->product->name ?? 'Produk',
+                            'size' => $item->product->size ?? '',
+                            'qty' => $item->qty,
+                            'price' => $item->price,
+                            'subtotal' => $item->subtotal,
+                        ];
+                    })->values()->toArray(),
+                ];
+
+                $response = Http::timeout(5)->post($printerUrl . '/print', $payload);
+
+                if ($response->successful()) {
+                    $result = $response->json();
+                    $printMessage = $result['message'] ?? 'Permintaan print dikirim.';
+                } else {
+                    $printMessage = 'Transaksi tersimpan, tetapi printer service gagal merespons.';
+                }
+            } catch (\Throwable $e) {
+                $printMessage = 'Transaksi tersimpan, tetapi gagal menghubungi printer service.';
+            }
+
             session()->forget('cart');
 
             return redirect()
                 ->route('cashier.pos')
-                ->with('success', 'Pembayaran berhasil. Transaksi tersimpan dengan invoice ' . $sale->invoice_number . '.');
+                ->with('success', 'Pembayaran berhasil. Transaksi tersimpan dengan invoice ' . $sale->invoice_number . '. ' . $printMessage);
         } catch (\Throwable $th) {
             DB::rollBack();
 
@@ -156,5 +196,15 @@ class PosController extends Controller
         $sale->load('items.product');
 
         return view('cashier.sales.show', compact('sale'));
+    }
+
+    public function markGesturePassed(Request $request)
+    {
+        session(['gesture_passed' => true]);
+
+        return response()->json([
+            'success' => true,
+            'redirect' => route('cashier.pos'),
+        ]);
     }
 }
